@@ -10,9 +10,12 @@ import {
   ExternalLink,
   Plus,
   Trash2,
-  Edit
+  Edit,
+  ShieldAlert
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import ActionMenu from '@/components/ActionMenu';
+import Modal from '@/components/Modal';
 
 interface Resource {
   id: string;
@@ -31,18 +34,40 @@ export default function ResourcesManagement() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    fetch('/api/admin/resources')
-      .then(res => res.json())
-      .then(data => {
-        setResources(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to fetch resources:', err);
-        setLoading(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+
+  const deleteResource = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this resource?')) return;
+    try {
+      const res = await fetch(`/api/admin/resources/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setResources(resources.filter(r => r.id !== id));
+      }
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
+  };
+
+  const togglePrivacy = async (id: string, isPublic: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/resources/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPublic }),
       });
-  }, []);
+      if (res.ok) {
+        setResources(resources.map(r => r.id === id ? { ...r, isPublic } : r));
+      }
+    } catch (err) {
+      console.error('Privacy toggle failed:', err);
+    }
+  };
+
+  const handleEdit = (resource: Resource) => {
+    setSelectedResource(resource);
+    setIsEditModalOpen(true);
+  };
 
   const filteredResources = resources.filter(r => 
     r.title.toLowerCase().includes(search.toLowerCase()) || 
@@ -106,15 +131,20 @@ export default function ResourcesManagement() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.05 }}
-            className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all group relative overflow-hidden"
+            className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all group relative"
           >
             <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-               <button className="p-2 rounded-lg bg-white/10 text-slate-300 hover:text-emerald-400">
-                  <Edit className="h-4 w-4" />
-               </button>
-               <button className="p-2 rounded-lg bg-white/10 text-slate-300 hover:text-rose-400">
-                  <Trash2 className="h-4 w-4" />
-               </button>
+               <ActionMenu 
+                 actions={[
+                   { label: 'Edit Resource', icon: Edit, onClick: () => handleEdit(resource) },
+                   { 
+                     label: resource.isPublic ? 'Make Private' : 'Make Public', 
+                     icon: ShieldAlert, 
+                     onClick: () => togglePrivacy(resource.id, !resource.isPublic) 
+                   },
+                   { label: 'Delete Resource', icon: Trash2, onClick: () => deleteResource(resource.id), variant: 'danger' },
+                 ]} 
+               />
             </div>
 
             <div className="flex justify-between items-start mb-4">
@@ -156,6 +186,58 @@ export default function ResourcesManagement() {
           </motion.div>
         ))}
       </div>
+
+      <Modal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+        title="Edit Resource Details"
+      >
+        {selectedResource && (
+          <form className="space-y-4" onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const data = {
+              title: formData.get('title') as string,
+              description: formData.get('description') as string,
+              category: formData.get('category') as string,
+            };
+            try {
+              const res = await fetch(`/api/admin/resources/${selectedResource.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+              });
+              if (res.ok) {
+                setResources(resources.map(r => r.id === selectedResource.id ? { ...r, ...data } : r));
+                setIsEditModalOpen(false);
+              }
+            } catch (err) {
+              console.error('Update failed:', err);
+            }
+          }}>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Resource Title</label>
+              <input name="title" defaultValue={selectedResource.title} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-emerald-500/50" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Description</label>
+              <textarea name="description" defaultValue={selectedResource.description} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-emerald-500/50 h-24" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Category</label>
+              <input name="category" defaultValue={selectedResource.category} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-emerald-500/50" />
+            </div>
+            <div className="pt-4 flex gap-3">
+              <button type="submit" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-emerald-600/20">
+                Save Changes
+              </button>
+              <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-all border border-white/10">
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

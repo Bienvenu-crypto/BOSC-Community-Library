@@ -10,9 +10,15 @@ import {
   Phone,
   Calendar,
   ShieldCheck,
-  UserPlus
+  UserPlus,
+  Edit,
+  Trash2,
+  ShieldAlert,
+  CheckCircle
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import ActionMenu from '@/components/ActionMenu';
+import Modal from '@/components/Modal';
 
 interface Member {
   id: string;
@@ -44,6 +50,41 @@ export default function MembersManagement() {
         setLoading(false);
       });
   }, []);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+
+  const deleteMember = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this member?')) return;
+    try {
+      const res = await fetch(`/api/admin/members/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setMembers(members.filter(m => m.id !== id));
+      }
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
+  };
+
+  const updateMemberStatus = async (id: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/admin/members/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        setMembers(members.map(m => m.id === id ? { ...m, status: newStatus } : m));
+      }
+    } catch (err) {
+      console.error('Update status failed:', err);
+    }
+  };
+
+  const handleEdit = (member: Member) => {
+    setSelectedMember(member);
+    setIsEditModalOpen(true);
+  };
 
   const filteredMembers = members.filter(m => 
     m.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -95,7 +136,7 @@ export default function MembersManagement() {
       </div>
 
       {/* Members Table */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden">
+      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -152,9 +193,19 @@ export default function MembersManagement() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-2 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-white transition-colors">
-                      <MoreVertical className="h-5 w-5" />
-                    </button>
+                    <ActionMenu 
+                      actions={[
+                        { label: 'Edit Member', icon: Edit, onClick: () => handleEdit(member) },
+                        { 
+                          label: member.status === 'suspended' ? 'Activate Account' : 'Suspend Account', 
+                          icon: ShieldAlert, 
+                          onClick: () => updateMemberStatus(member.id, member.status === 'suspended' ? 'active' : 'suspended'),
+                          variant: member.status === 'suspended' ? 'default' : 'danger'
+                        },
+                        { label: 'Mark as Verified', icon: CheckCircle, onClick: () => updateMemberStatus(member.id, 'verified') },
+                        { label: 'Delete Record', icon: Trash2, onClick: () => deleteMember(member.id), variant: 'danger' },
+                      ]} 
+                    />
                   </td>
                 </motion.tr>
               ))}
@@ -162,6 +213,63 @@ export default function MembersManagement() {
           </table>
         </div>
       </div>
+
+      <Modal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+        title="Edit Member Information"
+      >
+        {selectedMember && (
+          <form className="space-y-4" onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const data = {
+              name: formData.get('name') as string,
+              email: formData.get('email') as string,
+              role: formData.get('role') as string,
+            };
+            try {
+              const res = await fetch(`/api/admin/members/${selectedMember.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+              });
+              if (res.ok) {
+                setMembers(members.map(m => m.id === selectedMember.id ? { ...m, ...data } : m));
+                setIsEditModalOpen(false);
+              }
+            } catch (err) {
+              console.error('Update failed:', err);
+            }
+          }}>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Full Name</label>
+              <input name="name" defaultValue={selectedMember.name} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-blue-500/50" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email Address</label>
+              <input name="email" defaultValue={selectedMember.email} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-blue-500/50" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Role</label>
+              <select name="role" defaultValue={selectedMember.role} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
+                <option value="student" className="bg-slate-900">Student</option>
+                <option value="teacher" className="bg-slate-900">Teacher</option>
+                <option value="researcher" className="bg-slate-900">Researcher</option>
+                <option value="librarian" className="bg-slate-900">Librarian</option>
+              </select>
+            </div>
+            <div className="pt-4 flex gap-3">
+              <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-600/20">
+                Save Changes
+              </button>
+              <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-all border border-white/10">
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

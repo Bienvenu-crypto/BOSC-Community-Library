@@ -9,9 +9,14 @@ import {
   XCircle,
   AlertCircle,
   MoreVertical,
-  User
+  User,
+  Edit,
+  Trash2,
+  CheckCircle
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import ActionMenu from '@/components/ActionMenu';
+import Modal from '@/components/Modal';
 
 interface ServiceRequest {
   id: string;
@@ -30,18 +35,40 @@ export default function RequestsManagement() {
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('/api/admin/requests')
-      .then(res => res.json())
-      .then(data => {
-        setRequests(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to fetch requests:', err);
-        setLoading(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+
+  const deleteRequest = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this request?')) return;
+    try {
+      const res = await fetch(`/api/admin/requests/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setRequests(requests.filter(r => r.id !== id));
+      }
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
+  };
+
+  const updateRequestStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`/api/admin/requests/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
       });
-  }, []);
+      if (res.ok) {
+        setRequests(requests.map(r => r.id === id ? { ...r, status } : r));
+      }
+    } catch (err) {
+      console.error('Update status failed:', err);
+    }
+  };
+
+  const handleEdit = (request: ServiceRequest) => {
+    setSelectedRequest(request);
+    setIsEditModalOpen(true);
+  };
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -125,18 +152,72 @@ export default function RequestsManagement() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                   <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500 transition-all">
-                      Respond
+                   <button 
+                     onClick={() => updateRequestStatus(request.id, 'approved')}
+                     className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500 transition-all"
+                   >
+                      Approve
                    </button>
-                   <button className="p-2 rounded-lg hover:bg-white/5 text-slate-500 transition-colors">
-                      <MoreVertical className="h-5 w-5" />
-                   </button>
+                   <ActionMenu 
+                     actions={[
+                       { label: 'Reject Request', icon: XCircle, onClick: () => updateRequestStatus(request.id, 'rejected'), variant: 'danger' },
+                       { label: 'Edit Details', icon: Edit, onClick: () => handleEdit(request) },
+                       { label: 'Archive Record', icon: Trash2, onClick: () => deleteRequest(request.id), variant: 'danger' },
+                     ]} 
+                   />
                 </div>
               </div>
             </motion.div>
           ))
         )}
       </div>
+
+      <Modal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+        title="Edit Request Details"
+      >
+        {selectedRequest && (
+          <form className="space-y-4" onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const data = {
+              type: formData.get('type') as string,
+              details: formData.get('details') as string,
+            };
+            try {
+              const res = await fetch(`/api/admin/requests/${selectedRequest.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+              });
+              if (res.ok) {
+                setRequests(requests.map(r => r.id === selectedRequest.id ? { ...r, ...data } : r));
+                setIsEditModalOpen(false);
+              }
+            } catch (err) {
+              console.error('Update failed:', err);
+            }
+          }}>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Request Type</label>
+              <input name="type" defaultValue={selectedRequest.type} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-indigo-500/50" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Additional Details</label>
+              <textarea name="details" defaultValue={selectedRequest.details || ''} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-indigo-500/50 h-24" />
+            </div>
+            <div className="pt-4 flex gap-3">
+              <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20">
+                Save Changes
+              </button>
+              <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-all border border-white/10">
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }
