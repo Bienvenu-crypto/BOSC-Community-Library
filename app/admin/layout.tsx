@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 
 export default function AdminLayout({
   children,
@@ -23,6 +24,13 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const pathname = usePathname();
+  const isLoginPage = pathname === '/admin/login';
+
+  // If it's the login page, we don't want to show the sidebar or the mobile header
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
@@ -101,7 +109,13 @@ export default function AdminLayout({
               </nav>
 
               <div className="p-6 border-t border-slate-800/50 mt-auto">
-                <button className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-rose-400 hover:bg-rose-400/10 transition-all group">
+                <button 
+                  onClick={async () => {
+                    await fetch('/api/admin/logout', { method: 'POST' });
+                    window.location.href = '/admin/login';
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-rose-400 hover:bg-rose-400/10 transition-all group"
+                >
                   <LogOut className="h-5 w-5" />
                   <span className="font-medium">Sign Out</span>
                 </button>
