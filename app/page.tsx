@@ -207,6 +207,7 @@ export default function LibraryDashboard() {
               <li><Link href="/documents/SUSTAINABILITY.md" className="hover:text-white transition-colors">Public-Sector Strategy & Pitch</Link></li>
               <li><Link href="/documents/SUBMISSION_LOG.md" className="hover:text-white transition-colors">Submission Log & Audit</Link></li>
               <li><Link href="/documents/REFLECTIVE_JOURNAL.md" className="hover:text-white transition-colors">Maintainer's Journal</Link></li>
+              <li><Link href="/admin" className="text-blue-400 hover:text-blue-300 transition-colors font-semibold">Admin Dashboard &rarr;</Link></li>
             </ul>
           </div>
         </div>

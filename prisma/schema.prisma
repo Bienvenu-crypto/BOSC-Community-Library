@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated-client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Member {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  role      String   @default("student") // student, teacher, researcher, etc.
+  status    String   @default("active") // active, suspended, pending
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  requests  Request[]
+}
+
+model Resource {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String   // Math, Science, Literature, History, Computer Science
+  language    String   // en, fr, es, sw
+  link        String
+  type        String   @default("document") // document, video, lab, etc.
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Request {
+  id          String   @id @default(cuid())
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id])
+  type        String   // Access, Support, Feedback
+  status      String   @default("pending") // pending, approved, rejected, resolved
+  details     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Log {
+  id        String   @id @default(cuid())
+  action    String
+  details   String?
+  adminId   String?
+  createdAt DateTime @default(now())
+}
