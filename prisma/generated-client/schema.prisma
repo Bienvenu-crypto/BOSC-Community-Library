@@ -24,6 +24,7 @@ model Member {
   id        String    @id @default(cuid())
   name      String
   email     String    @unique
+  password  String
   phone     String?
   role      String    @default("student") // student, teacher, researcher, etc.
   status    String    @default("active") // active, suspended, pending

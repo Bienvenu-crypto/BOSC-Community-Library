@@ -1,6 +1,6 @@
 import { PrismaClient } from './generated-client';
 import { resourcesData } from '../data/resources';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -54,7 +54,10 @@ async function main() {
     await prisma.member.upsert({
       where: { email: member.email },
       update: {},
-      create: member,
+      create: {
+        ...member,
+        password: await bcrypt.hash('memberpassword', 10),
+      },
     });
   }
 

@@ -19,24 +19,27 @@ export async function decrypt(input: string): Promise<any> {
   return payload;
 }
 
-export async function login(admin: { id: string; email: string; name: string | null }) {
-  const session = await encrypt({ id: admin.id, email: admin.email, name: admin.name });
+export async function login(user: { id: string; email: string; name: string | null }, role: 'admin' | 'member' = 'admin') {
+  const session = await encrypt({ id: user.id, email: user.email, name: user.name, role });
+  const cookieName = role === 'admin' ? 'session' : 'member-session';
   
-  (await cookies()).set('session', session, {
+  (await cookies()).set(cookieName, session, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 2 * 60 * 60, // 2 hours
+    maxAge: 24 * 60 * 60, // 24 hours
   });
 }
 
-export async function logout() {
-  (await cookies()).set('session', '', { expires: new Date(0), path: '/' });
+export async function logout(role: 'admin' | 'member' = 'admin') {
+  const cookieName = role === 'admin' ? 'session' : 'member-session';
+  (await cookies()).set(cookieName, '', { expires: new Date(0), path: '/' });
 }
 
-export async function getSession() {
-  const session = (await cookies()).get('session')?.value;
+export async function getSession(role: 'admin' | 'member' = 'admin') {
+  const cookieName = role === 'admin' ? 'session' : 'member-session';
+  const session = (await cookies()).get(cookieName)?.value;
   if (!session) return null;
   try {
     return await decrypt(session);

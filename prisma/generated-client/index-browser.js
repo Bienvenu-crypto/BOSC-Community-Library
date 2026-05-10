@@ -131,6 +131,7 @@ exports.Prisma.MemberScalarFieldEnum = {
   id: 'id',
   name: 'name',
   email: 'email',
+  password: 'password',
   phone: 'phone',
   role: 'role',
   status: 'status',

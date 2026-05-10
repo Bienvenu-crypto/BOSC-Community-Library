@@ -1,4 +1,5 @@
 import { PrismaClient } from '../prisma/generated-client';
+// Force reload: 2026-05-10-v2
 
 const prismaClientSingleton = () => {
   return new PrismaClient();

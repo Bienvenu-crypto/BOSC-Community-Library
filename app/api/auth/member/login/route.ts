@@ -7,24 +7,27 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
-    const admin = await prisma.admin.findUnique({
+    const member = await prisma.member.findUnique({
       where: { email },
     });
 
-    if (!admin) {
+    if (!member) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    const passwordMatch = await bcrypt.compare(password, admin.password);
+    if (member.status === 'suspended') {
+      return NextResponse.json({ error: 'Your account has been suspended' }, { status: 403 });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, member.password);
 
     if (!passwordMatch) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    await logout('admin');
-    await login({ id: admin.id, email: admin.email, name: admin.name }, 'admin');
+    await login({ id: member.id, email: member.email, name: member.name }, 'member');
 
-    return NextResponse.json({ success: true, name: admin.name });
+    return NextResponse.json({ success: true, name: member.name });
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

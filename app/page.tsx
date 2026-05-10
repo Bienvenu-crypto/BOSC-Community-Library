@@ -45,9 +45,9 @@ export default function LibraryDashboard() {
             <Library className="h-8 w-8 text-blue-300" />
             <h1 className="text-2xl font-bold tracking-tight">BOSC Community Library</h1>
           </div>
-          <nav className="flex gap-6 text-sm font-medium">
+          <nav className="flex items-center gap-6 text-sm font-medium">
              <Link href="/governance" className="hover:text-blue-200 transition-colors">Governance & Reports</Link>
-             <a href="https://github.com/bosc-community-library" target="_blank" rel="noopener noreferrer" className="hover:text-blue-200 transition-colors">Source Code (GPLv3)</a>
+             <Link href="/portal/login" className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 transition-all border border-blue-500/30 font-bold">Member Portal</Link>
           </nav>
         </div>
       </header>

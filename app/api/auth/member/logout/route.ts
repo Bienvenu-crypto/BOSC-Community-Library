@@ -2,6 +2,6 @@ import { NextResponse } from 'next/server';
 import { logout } from '@/lib/auth';
 
 export async function POST() {
-  await logout('admin');
+  await logout('member');
   return NextResponse.json({ success: true });
 }
