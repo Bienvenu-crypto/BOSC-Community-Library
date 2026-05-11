@@ -2,14 +2,29 @@
 
 import { useState, useMemo } from 'react';
 import { resourcesData } from '@/data/resources';
-import { Search, BookOpen, Globe, Library } from 'lucide-react';
+import { Search, BookOpen, Globe, Library, ExternalLink, Download, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+
+import { Resource } from '@/data/resources';
 
 export default function LibraryDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+  const [isReading, setIsReading] = useState(false);
+
+  const openResource = (resource: Resource) => {
+    setSelectedResource(resource);
+    setIsReading(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const closeResource = () => {
+    setIsReading(false);
+    setSelectedResource(null);
+  };
 
   // Simulated Feature Enhancement [Issue #27] & Refactoring [Issue #31]: Searchable, filtered, and memoized resource list
   const filteredResources = useMemo(() => {
@@ -35,6 +50,92 @@ export default function LibraryDashboard() {
     { code: 'es', name: 'Español' },
     { code: 'sw', name: 'Kiswahili' },
   ];
+
+  if (isReading && selectedResource) {
+    return (
+      <div className="min-h-screen bg-white font-sans flex flex-col">
+        {/* Top Navigation Bar */}
+        <header className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={closeResource}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all font-bold text-sm"
+            >
+              &larr; Back to Library
+            </button>
+            <div className="h-6 w-px bg-white/20 hidden sm:block" />
+            <div className="hidden sm:block">
+              <h1 className="text-sm font-bold text-blue-300 uppercase tracking-widest">{selectedResource.category}</h1>
+              <p className="text-xs text-slate-400 font-medium">{selectedResource.title}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase border border-emerald-500/20">
+               Official Resource
+             </div>
+          </div>
+        </header>
+
+        {/* Resource Viewer Content */}
+        <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-12 space-y-12">
+          <div className="space-y-6 text-center max-w-3xl mx-auto">
+             <h2 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+               {selectedResource.title}
+             </h2>
+             <p className="text-xl text-slate-500 leading-relaxed">
+               {selectedResource.description}
+             </p>
+          </div>
+
+          {/* Simulated Content Area */}
+          <div className="aspect-[16/10] bg-slate-50 rounded-[2.5rem] border-2 border-slate-100 flex items-center justify-center relative overflow-hidden shadow-inner group">
+             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05)_0%,transparent_70%)]" />
+             <div className="text-center space-y-6 relative z-10 p-10">
+                <div className="h-24 w-24 rounded-3xl bg-blue-600 flex items-center justify-center mx-auto shadow-2xl shadow-blue-600/30 group-hover:scale-110 transition-transform duration-500">
+                   <BookOpen className="h-12 w-12 text-white" />
+                </div>
+                <div>
+                   <p className="text-lg font-bold text-slate-900">Digital Resource Content</p>
+                   <p className="text-sm text-slate-400 max-w-xs mx-auto mt-2">
+                     In a production environment, this area would render a PDF viewer, an interactive lab, or the official resource URL.
+                   </p>
+                </div>
+             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12 border-t border-slate-100">
+             <div className="space-y-2">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Language Focus</h4>
+                <p className="text-sm font-bold text-slate-900 capitalize">{selectedResource.language}</p>
+             </div>
+             <div className="space-y-2">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Data Sovereignty</h4>
+                <p className="text-sm font-bold text-slate-900">Ministry Hosted (Internal Node)</p>
+             </div>
+             <div className="space-y-2">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Public Credit</h4>
+                <p className="text-sm font-bold text-slate-900">GPLv3 Open Access</p>
+             </div>
+          </div>
+        </main>
+
+        <footer className="bg-slate-50 border-t border-slate-100 py-10 px-6 mt-20">
+           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
+              <div className="flex items-center gap-3">
+                 <Library className="h-6 w-6 text-blue-600" />
+                 <span className="font-bold text-slate-900">BOSC Community Library</span>
+              </div>
+              <button 
+                onClick={closeResource}
+                className="text-sm font-bold text-blue-600 hover:text-blue-700"
+              >
+                Return to Directory &rarr;
+              </button>
+           </div>
+        </footer>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
@@ -68,7 +169,7 @@ export default function LibraryDashboard() {
               placeholder="Search resources, textbooks, and interactive labs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-full border-0 focus:ring-4 focus:ring-blue-400 text-slate-900 font-medium shadow-lg transition-all"
+              className="w-full pl-12 pr-4 py-4 rounded-full border-0 bg-white focus:ring-4 focus:ring-blue-400 text-slate-900 font-medium shadow-xl transition-all placeholder:text-slate-400"
             />
           </div>
         </div>
@@ -135,7 +236,11 @@ export default function LibraryDashboard() {
           {filteredResources.length > 0 ? (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               {filteredResources.map((resource) => (
-                <div key={resource.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow group flex flex-col justify-between">
+                <button 
+                  key={resource.id} 
+                  onClick={() => openResource(resource)}
+                  className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-blue-400/50 transition-all group flex flex-col justify-between text-left active:scale-[0.98]"
+                >
                   <div>
                     <div className="flex justify-between items-start mb-3">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -153,20 +258,10 @@ export default function LibraryDashboard() {
                     </p>
                   </div>
 
-                  {/* Functional Bug [Issue #16] fixed conceptually: Validated resource links */}
-                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between w-full">
                     <span className="text-xs text-slate-500 font-mono">ID: {resource.id}</span>
-                    <a
-                      href={resource.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600/5 text-blue-700 text-sm font-bold hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-2 border border-blue-600/10 shadow-sm active:scale-95 group/btn"
-                    >
-                      Access Resource
-                      <span className="group-hover/btn:translate-x-1 transition-transform">&rarr;</span>
-                    </a>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           ) : (
@@ -210,11 +305,12 @@ export default function LibraryDashboard() {
               <li><Link href="/documents/SUSTAINABILITY.md" className="hover:text-white transition-colors">Public-Sector Strategy & Pitch</Link></li>
               <li><Link href="/documents/SUBMISSION_LOG.md" className="hover:text-white transition-colors">Submission Log & Audit</Link></li>
               <li><Link href="/documents/REFLECTIVE_JOURNAL.md" className="hover:text-white transition-colors">Maintainer's Journal</Link></li>
-
             </ul>
           </div>
         </div>
       </footer>
+
     </div>
   );
 }
+
