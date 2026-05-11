@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireAdminSession } from '@/lib/api-auth';
 
 export async function GET() {
+  const authError = await requireAdminSession();
+  if (authError) return authError;
+
   try {
     const [memberCount, resourceCount, requestCount, pendingRequests] = await Promise.all([
       prisma.member.count(),

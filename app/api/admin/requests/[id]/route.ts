@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireAdminSession } from '@/lib/api-auth';
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminSession();
+  if (authError) return authError;
+
   try {
     const { id } = await params;
     const serviceRequest = await prisma.request.findUnique({
@@ -34,10 +38,13 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminSession();
+  if (authError) return authError;
+
   try {
     const { id } = await params;
     const body = await request.json();
-    
+
     const serviceRequest = await prisma.request.update({
       where: { id },
       data: {
@@ -64,6 +71,9 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminSession();
+  if (authError) return authError;
+
   try {
     const { id } = await params;
     await prisma.request.delete({

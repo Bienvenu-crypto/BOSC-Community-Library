@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireAdminSession } from '@/lib/api-auth';
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminSession();
+  if (authError) return authError;
+
   try {
     const { id } = await params;
     const member = await prisma.member.findUnique({
@@ -18,7 +22,9 @@ export async function GET(
       return NextResponse.json({ error: 'Member not found' }, { status: 404 });
     }
 
-    return NextResponse.json(member);
+    // Omit password from response
+    const { password: _pw, ...safeMember } = member;
+    return NextResponse.json(safeMember);
   } catch (error) {
     console.error('Error fetching member:', error);
     return NextResponse.json({ error: 'Failed to fetch member' }, { status: 500 });
@@ -29,10 +35,13 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminSession();
+  if (authError) return authError;
+
   try {
     const { id } = await params;
     const body = await request.json();
-    
+
     const member = await prisma.member.update({
       where: { id },
       data: {
@@ -51,7 +60,8 @@ export async function PATCH(
       }
     });
 
-    return NextResponse.json(member);
+    const { password: _pw, ...safeMember } = member;
+    return NextResponse.json(safeMember);
   } catch (error) {
     console.error('Error updating member:', error);
     return NextResponse.json({ error: 'Failed to update member' }, { status: 500 });
@@ -62,6 +72,9 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminSession();
+  if (authError) return authError;
+
   try {
     const { id } = await params;
     const member = await prisma.member.delete({
