@@ -35,6 +35,19 @@ export default function RequestsManagement() {
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    fetch('/api/admin/requests')
+      .then(res => res.json())
+      .then(data => {
+        setRequests(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch requests:', err);
+        setLoading(false);
+      });
+  }, []);
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
 

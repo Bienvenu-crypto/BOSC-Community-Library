@@ -32,6 +32,19 @@ interface Resource {
 export default function ResourcesManagement() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/resources')
+      .then(res => res.json())
+      .then(data => {
+        setResources(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch resources:', err);
+        setLoading(false);
+      });
+  }, []);
   const [search, setSearch] = useState('');
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
