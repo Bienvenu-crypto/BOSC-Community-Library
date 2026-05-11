@@ -7,7 +7,6 @@ import {
   Filter, 
   MoreVertical,
   Globe,
-  ExternalLink,
   Plus,
   Trash2,
   Edit,
@@ -187,14 +186,7 @@ export default function ResourcesManagement() {
                     <span className="text-xs text-slate-300">{resource.isPublic ? 'Public' : 'Internal'}</span>
                  </div>
               </div>
-              <a 
-                href={resource.link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="p-2 rounded-full bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/0 hover:shadow-emerald-500/20"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </a>
+
             </div>
           </motion.div>
         ))}

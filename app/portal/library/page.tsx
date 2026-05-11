@@ -3,8 +3,7 @@ import prisma from '@/lib/prisma';
 import { 
   BookOpen, 
   Search, 
-  Globe, 
-  ExternalLink,
+  Globe,
   Filter
 } from 'lucide-react';
 
@@ -72,15 +71,7 @@ export default async function MemberLibrary() {
                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Material Type</span>
                 <span className="text-xs text-slate-300 capitalize">{resource.type}</span>
               </div>
-              <a 
-                href={resource.link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/20"
-              >
-                Access Resource
-                <ExternalLink className="h-3 w-3" />
-              </a>
+
             </div>
           </div>
         ))}
