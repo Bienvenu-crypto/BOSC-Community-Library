@@ -9,7 +9,9 @@ import {
   XCircle, 
   AlertCircle,
   Send,
-  Loader2
+  Loader2,
+  RefreshCw,
+  TriangleAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Modal from '@/components/Modal';
@@ -27,12 +29,21 @@ export default function MemberRequests() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/portal/requests')
-      .then(res => res.json())
+      .then(async res => {
+        if (!res.ok) throw new Error('Failed to load requests');
+        return res.json();
+      })
       .then(data => {
         setRequests(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setFetchError('Could not load your requests. Please refresh the page.');
         setLoading(false);
       });
   }, []);
@@ -40,6 +51,7 @@ export default function MemberRequests() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
+    setSubmitError(null);
     const formData = new FormData(e.currentTarget);
     const data = {
       type: formData.get('type'),
@@ -56,9 +68,12 @@ export default function MemberRequests() {
         const newRequest = await res.json();
         setRequests([newRequest, ...requests]);
         setIsModalOpen(false);
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        setSubmitError(errorData.error || 'Submission failed. Please try again.');
       }
-    } catch (err) {
-      console.error('Failed to submit request:', err);
+    } catch {
+      setSubmitError('Network error. Please check your connection and try again.');
     } finally {
       setSubmitting(false);
     }
@@ -82,6 +97,26 @@ export default function MemberRequests() {
 
   return (
     <div className="space-y-8">
+      {fetchError && (
+        <div className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+          <TriangleAlert className="h-5 w-5 shrink-0" />
+          <span className="text-sm font-medium">{fetchError}</span>
+          <button
+            onClick={() => {
+              setFetchError(null);
+              setLoading(true);
+              fetch('/api/portal/requests')
+                .then(r => r.json())
+                .then(d => { setRequests(d); setLoading(false); })
+                .catch(() => { setFetchError('Could not load your requests. Please refresh the page.'); setLoading(false); });
+            }}
+            className="ml-auto flex items-center gap-1 text-xs font-bold hover:text-rose-300 transition-colors"
+          >
+            <RefreshCw className="h-3.5 w-3.5" /> Retry
+          </button>
+        </div>
+      )}
+
       <header className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -170,6 +205,12 @@ export default function MemberRequests() {
               className="w-full px-4 py-4 rounded-2xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-emerald-500/50 h-32 resize-none placeholder:text-slate-600"
             />
           </div>
+          {submitError && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
+              <TriangleAlert className="h-4 w-4 shrink-0" />
+              {submitError}
+            </div>
+          )}
           <button 
             type="submit" 
             disabled={submitting}

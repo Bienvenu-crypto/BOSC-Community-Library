@@ -10,7 +10,9 @@ import {
   Plus,
   Trash2,
   Edit,
-  ShieldAlert
+  ShieldAlert,
+  Loader2,
+  TriangleAlert
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import ActionMenu from '@/components/ActionMenu';
@@ -47,7 +49,10 @@ export default function ResourcesManagement() {
   const [search, setSearch] = useState('');
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const deleteResource = async (id: string) => {
     if (!confirm('Are you sure you want to delete this resource?')) return;
@@ -107,7 +112,9 @@ export default function ResourcesManagement() {
           <p className="text-slate-400">Catalog and manage educational materials, textbooks, and digital commons.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/20">
+          <button 
+            onClick={() => { setSaveError(null); setIsAddModalOpen(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/20">
             <Plus className="h-4 w-4" />
             <span>Add New Resource</span>
           </button>
@@ -192,6 +199,120 @@ export default function ResourcesManagement() {
         ))}
       </div>
 
+      {/* Add New Resource Modal */}
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => { setIsAddModalOpen(false); setSaveError(null); }}
+        title="Add New Resource"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setSaving(true);
+            setSaveError(null);
+            const formData = new FormData(e.currentTarget);
+            const data = {
+              title: formData.get('title') as string,
+              description: formData.get('description') as string,
+              category: formData.get('category') as string,
+              language: formData.get('language') as string,
+              link: formData.get('link') as string,
+              type: formData.get('type') as string,
+              isPublic: formData.get('isPublic') === 'true',
+            };
+            try {
+              const res = await fetch('/api/admin/resources', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+              });
+              if (res.ok) {
+                const created = await res.json();
+                setResources([created, ...resources]);
+                setIsAddModalOpen(false);
+                setSaveError(null);
+              } else {
+                const errData = await res.json().catch(() => ({}));
+                setSaveError(errData.error || 'Failed to create resource. Please try again.');
+              }
+            } catch {
+              setSaveError('Network error. Please check your connection.');
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Resource Title *</label>
+            <input name="title" required placeholder="e.g. Introduction to Calculus" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-emerald-500/50 placeholder:text-slate-600" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Description *</label>
+            <textarea name="description" required placeholder="Brief description of the resource..." className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-emerald-500/50 h-24 resize-none placeholder:text-slate-600" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Category *</label>
+              <select name="category" required className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none">
+                <option value="Math">Math</option>
+                <option value="Science">Science</option>
+                <option value="Literature">Literature</option>
+                <option value="History">History</option>
+                <option value="Computer Science">Computer Science</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Language *</label>
+              <select name="language" required className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none">
+                <option value="en">English</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+                <option value="sw">Swahili</option>
+              </select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Resource Link *</label>
+            <input name="link" required type="url" placeholder="https://..." className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:ring-2 focus:ring-emerald-500/50 placeholder:text-slate-600" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Type</label>
+              <select name="type" defaultValue="document" className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none">
+                <option value="document">Document</option>
+                <option value="video">Video</option>
+                <option value="lab">Lab</option>
+                <option value="article">Article</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Visibility</label>
+              <select name="isPublic" defaultValue="true" className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none">
+                <option value="true">Public</option>
+                <option value="false">Private</option>
+              </select>
+            </div>
+          </div>
+          {saveError && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
+              <TriangleAlert className="h-4 w-4 shrink-0" />
+              {saveError}
+            </div>
+          )}
+          <div className="pt-2 flex gap-3">
+            <button type="submit" disabled={saving} className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-emerald-600/20">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {saving ? 'Creating...' : 'Create Resource'}
+            </button>
+            <button type="button" onClick={() => { setIsAddModalOpen(false); setSaveError(null); }} className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-all border border-white/10">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Resource Modal */}
       <Modal 
         isOpen={isEditModalOpen} 
         onClose={() => setIsEditModalOpen(false)} 

@@ -49,17 +49,31 @@ export async function getSession(role: 'admin' | 'member' = 'admin') {
 }
 
 export async function updateSession(request: NextRequest) {
-  const session = request.cookies.get('session')?.value;
+  // Determine which cookie to refresh based on the path
+  const path = request.nextUrl.pathname;
+  const isPortalPath = path.startsWith('/portal');
+  const cookieName = isPortalPath ? 'member-session' : 'session';
+
+  const session = request.cookies.get(cookieName)?.value;
   if (!session) return;
 
   // Refresh the session so it doesn't expire
-  const parsed = await decrypt(session);
+  let parsed: any;
+  try {
+    parsed = await decrypt(session);
+  } catch {
+    return;
+  }
+
   parsed.expires = new Date(Date.now() + 2 * 60 * 60 * 1000);
   const res = NextResponse.next();
   res.cookies.set({
-    name: 'session',
+    name: cookieName,
     value: await encrypt(parsed),
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
     expires: parsed.expires,
   });
   return res;
