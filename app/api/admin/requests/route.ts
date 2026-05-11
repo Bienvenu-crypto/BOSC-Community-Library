@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireAdminSession } from '@/lib/api-auth';
 
 export async function GET() {
+  const authError = await requireAdminSession();
+  if (authError) return authError;
+
   try {
     const requests = await prisma.request.findMany({
       include: {
@@ -22,6 +26,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authError = await requireAdminSession();
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const serviceRequest = await prisma.request.create({
@@ -33,7 +40,7 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json(serviceRequest);
+    return NextResponse.json(serviceRequest, { status: 201 });
   } catch (error) {
     console.error('Error creating request:', error);
     return NextResponse.json({ error: 'Failed to create request' }, { status: 500 });

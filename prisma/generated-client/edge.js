@@ -171,7 +171,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\HP\\BOSC-Community-Library\\prisma\\generated-client",
+      "value": "/root/.openclaw/workspace/BOSC-Community-Library/prisma/generated-client",
       "fromEnvVar": null
     },
     "config": {
@@ -180,17 +180,16 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "debian-openssl-3.0.x",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\HP\\BOSC-Community-Library\\prisma\\schema.prisma",
+    "sourceFilePath": "/root/.openclaw/workspace/BOSC-Community-Library/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "..",
   "clientVersion": "6.19.3",
@@ -199,7 +198,7 @@ const config = {
     "db"
   ],
   "activeProvider": "sqlite",
-  "postinstall": false,
+  "postinstall": true,
   "inlineDatasources": {
     "db": {
       "url": {
