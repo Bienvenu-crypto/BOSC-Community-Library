@@ -26,4 +26,4 @@ As requested in the take-home exam requirements, this file outlines the completi
 - **Sustainability Model & Government Pitch**: See `SUSTAINABILITY.md`.
 
 ## Screenshots and Proof of Participation
-*(Since this is an AI-generated digital environment, the GitHub UI screenshots cannot be placed directly here. However, the system commits and timestamps serve as the technical artifact of this implementation).*
+
