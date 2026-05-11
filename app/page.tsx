@@ -16,17 +16,17 @@ export default function LibraryDashboard() {
     return resourcesData.filter((resource) => {
       // Functional Bug [Issue #12] fixed conceptually here: ensure defensive checks string matching and always return array
       if (!resource) return false;
-      const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            resource.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        resource.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesLanguage = selectedLanguage === 'all' || resource.language === selectedLanguage;
       const matchesCategory = selectedCategory === 'all' || resource.category === selectedCategory;
-      
+
       return matchesSearch && matchesLanguage && matchesCategory;
     });
   }, [searchQuery, selectedLanguage, selectedCategory]);
 
   const categories = ['all', ...Array.from(new Set(resourcesData.map(r => r.category)))];
-  
+
   // Simulated Feature Enhancement [Issue #22]: Localized language support selector
   const languages = [
     { code: 'all', name: 'All Languages' },
@@ -46,8 +46,8 @@ export default function LibraryDashboard() {
             <h1 className="text-2xl font-bold tracking-tight">BOSC Community Library</h1>
           </div>
           <nav className="flex items-center gap-6 text-sm font-medium">
-             <Link href="/governance" className="hover:text-blue-200 transition-colors">Governance & Reports</Link>
-             <Link href="/portal/login" className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 transition-all border border-blue-500/30 font-bold">Member Portal</Link>
+            <Link href="/governance" className="hover:text-blue-200 transition-colors">Governance & Reports</Link>
+            <Link href="/portal/login" className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 transition-all border border-blue-500/30 font-bold">Member Portal</Link>
           </nav>
         </div>
       </header>
@@ -59,13 +59,13 @@ export default function LibraryDashboard() {
           <p className="text-lg text-blue-200 max-w-2xl mx-auto">
             An open, free, and transparent repository of educational resources designed for the Ministry of Education and local institutions. Assuring data sovereignty and zero vendor lock-in.
           </p>
-          
+
           {/* Search Bar */}
           <div className="mt-8 max-w-2xl mx-auto relative flex items-center">
             <Search className="absolute left-4 text-slate-400 h-5 w-5" />
-            <input 
-              type="text" 
-              placeholder="Search resources, textbooks, and interactive labs..." 
+            <input
+              type="text"
+              placeholder="Search resources, textbooks, and interactive labs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-4 rounded-full border-0 focus:ring-4 focus:ring-blue-400 text-slate-900 font-medium shadow-lg transition-all"
@@ -76,7 +76,7 @@ export default function LibraryDashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col md:flex-row gap-8">
-        
+
         {/* Sidebar Filters */}
         <aside className="w-full md:w-64 shrink-0 space-y-8">
           {/* Language Filter */}
@@ -87,10 +87,10 @@ export default function LibraryDashboard() {
             <div className="space-y-2">
               {languages.map((lang) => (
                 <label key={lang.code} className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer">
-                  <input 
-                    type="radio" 
-                    name="language" 
-                    value={lang.code} 
+                  <input
+                    type="radio"
+                    name="language"
+                    value={lang.code}
                     checked={selectedLanguage === lang.code}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
                     className="text-blue-600 focus:ring-blue-500 h-4 w-4"
@@ -109,10 +109,10 @@ export default function LibraryDashboard() {
             <div className="space-y-2">
               {categories.map((cat) => (
                 <label key={cat} className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer capitalize">
-                  <input 
-                    type="radio" 
-                    name="category" 
-                    value={cat} 
+                  <input
+                    type="radio"
+                    name="category"
+                    value={cat}
                     checked={selectedCategory === cat}
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="text-blue-600 focus:ring-blue-500 h-4 w-4"
@@ -131,7 +131,7 @@ export default function LibraryDashboard() {
               Found {filteredResources.length} available resources
             </h2>
           </div>
-          
+
           {filteredResources.length > 0 ? (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               {filteredResources.map((resource) => (
@@ -152,15 +152,18 @@ export default function LibraryDashboard() {
                       {resource.description}
                     </p>
                   </div>
-                  
+
                   {/* Functional Bug [Issue #16] fixed conceptually: Validated resource links */}
                   <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
                     <span className="text-xs text-slate-500 font-mono">ID: {resource.id}</span>
-                    <a 
-                      href={resource.link} 
-                      className="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                    <a
+                      href={resource.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600/5 text-blue-700 text-sm font-bold hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-2 border border-blue-600/10 shadow-sm active:scale-95 group/btn"
                     >
-                      Access Resource &rarr;
+                      Access Resource
+                      <span className="group-hover/btn:translate-x-1 transition-transform">&rarr;</span>
                     </a>
                   </div>
                 </div>
@@ -171,7 +174,7 @@ export default function LibraryDashboard() {
               <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-slate-900">No resources found</h3>
               <p className="text-slate-500 mt-1">Try adjusting your search criteria or language filters.</p>
-              <button 
+              <button
                 onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedLanguage('all'); }}
                 className="mt-4 px-4 py-2 bg-blue-50 text-blue-700 rounded-md font-medium hover:bg-blue-100"
               >
@@ -181,12 +184,12 @@ export default function LibraryDashboard() {
           )}
         </div>
       </main>
-      
+
       {/* Footer */}
       <footer className="bg-slate-900 text-slate-400 py-12 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
           <div>
-            <h4 className="text-white font-bold mb-4 flex items-center gap-2"><Library className="h-5 w-5"/> BOSC Community Library</h4>
+            <h4 className="text-white font-bold mb-4 flex items-center gap-2"><Library className="h-5 w-5" /> BOSC Community Library</h4>
             <p className="mb-4 text-slate-500">
               Empowering public education through robust, scalable, and fully transparent open-source technology.
             </p>
@@ -207,7 +210,7 @@ export default function LibraryDashboard() {
               <li><Link href="/documents/SUSTAINABILITY.md" className="hover:text-white transition-colors">Public-Sector Strategy & Pitch</Link></li>
               <li><Link href="/documents/SUBMISSION_LOG.md" className="hover:text-white transition-colors">Submission Log & Audit</Link></li>
               <li><Link href="/documents/REFLECTIVE_JOURNAL.md" className="hover:text-white transition-colors">Maintainer's Journal</Link></li>
-              <li><Link href="/admin" className="text-blue-400 hover:text-blue-300 transition-colors font-semibold">Admin Dashboard &rarr;</Link></li>
+
             </ul>
           </div>
         </div>
