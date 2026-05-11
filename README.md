@@ -9,8 +9,8 @@
 2. Run the app:
    `npm run dev`
 
-admin email:
-'admin@bosc.library'
-
+3. admin email:
+   `admin@bosc.library`
+   
 admin password:
-"adminpassword"
+   `adminpassword`
