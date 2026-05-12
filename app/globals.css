@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+/* Hide Next.js 15 Dev Indicator ("N" icon) */
+[data-nextjs-static-indicator],
+#nextjs-static-indicator-container,
+.__next-static-indicator {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

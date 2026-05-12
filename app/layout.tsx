@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'BOSC Community Library Dashboard',
   description: 'An open-source digital library platform with robust community governance, designed for public-sector use.',
+  icons: {
+    icon: 'data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9ssAAAAASUVORK5CYII=',
+  }
 };
 
 export default function RootLayout({
